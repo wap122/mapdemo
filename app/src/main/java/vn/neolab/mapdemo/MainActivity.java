@@ -18,6 +18,8 @@ import com.google.android.gms.maps.model.PolylineOptions;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleMap.OnPolylineClickListener, GoogleMap.OnPolygonClickListener {
 
+    GoogleMap mGoogleMap;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,14 +32,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     LatLng[] beginLine = {new LatLng(-27.457, 150.040),
             new LatLng(-30.852, 153.211)};
 
-    LatLng originalLat = new LatLng(-27.457, 150.040);
+    LatLng[] coordinates = {new LatLng(-27.457, 153.040),
+            new LatLng(-33.852, 151.211),
+            new LatLng(-37.813, 144.962),
+            new LatLng(-34.928, 138.599)};
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        LatLng[] coordinates = {new LatLng(-27.457, 153.040),
-                new LatLng(-33.852, 151.211),
-                new LatLng(-37.813, 144.962),
-                new LatLng(-34.928, 138.599)};
+        this.mGoogleMap = googleMap;
 
         PolygonOptions poly = new PolygonOptions().clickable(true);
         for (int i = 0, length = coordinates.length; i < length; i++) {
@@ -49,11 +51,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         Polygon area = googleMap.addPolygon(poly);
         stylePolygon(area);
-        googleMap.addPolyline(new PolylineOptions().add(beginLine));
 
-        area.setTag("alpha");
 
-        drawParalelLine(3);
+        drawFirstLine();
 
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-23.684, 133.903), 4));
 
@@ -66,11 +66,56 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void drawParalelLine(int distance) {
+        double decrease = (float) distance / 10;
+        Point oriPoint = new Point(coordinates[0]);
+        Line oriLine = new Line(new Point(beginLine[0]), new Point(beginLine[1]));
+//        Line vuonggocLine = new Line(oriP, oriLine.getCp());
 
+//        double a = 130;
+//        drawALine(new Point(a, vuonggocLine.generateY(a)), oriP);
+
+
+        Point runPoint = oriPoint;
+        for (int i = 0; i < 5; i++) {
+            double dis1;
+            double k = distance * 5;
+            Line resultLine;
+            do {
+                k -= decrease;
+                Point newPoint = new Point(runPoint.getX() - k, runPoint.getY() - k);
+                resultLine = new Line(newPoint, oriLine.getPt());
+                dis1 = resultLine.getDistance(runPoint);
+            } while (dis1 > distance);
+            double xNew = runPoint.getX() - 3;
+            runPoint = new Point(xNew, resultLine.generateY(xNew));
+            double p = runPoint.getX() + 8;
+            drawALine(runPoint, new Point(p, resultLine.generateY(p)));
+        }
+
+
+        //        Vector chinhphuong = getBaseVector();
+//        Vector phaptuyen = new Vector(-chinhphuong.getY(), chinhphuong.getX());
+//
+//        Line line = new Line(phaptuyen.getX(), phaptuyen.getY(), 0);
+//
+//        Point ori1 = new Point(beginLine[0]);
+//        Point la1 = new Point(ori1.getX() - 2, ori1.getY() - 2);
+//        line.setC(-(line.getA() * la1.getX() + line.getB() * la1.getY()));
+//
+//        double a = 154.2;
+//        Point la2 = new Point(a, line.generateY(a));
+//
+//        drawALine(la1.toLatLng(), la2.toLatLng());
+
+//        mGoogleMap.addPolyline(new PolylineOptions().add(new LatLng(1, 1), new LatLng(-28, 32.049)));
     }
 
-    private void drawFirstLine(LatLng original) {
+    private void drawFirstLine() {
+        drawParalelLine(3);
+    }
 
+    private void drawALine(Point a, Point b) {
+        mGoogleMap.addPolyline(new PolylineOptions().add(a.toLatLng(), b.toLatLng()));
     }
 
     private static final int COLOR_GREEN_ARGB = 0xff388E3C;
